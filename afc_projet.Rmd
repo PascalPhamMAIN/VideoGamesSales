@@ -49,12 +49,36 @@ head(jeu_donnees_grouped1)
 chisq.test(jeu_donnees_grouped1)
 ```
 
-La p-valeur est largement inférieure à 0.05, l'hypothèse est rejetée, donc, il y a bien une relation entre ces 2 variables. On peut donc effectuer l'AFC.
+La p-valeur est largement inférieure à 0.05, l'hypothèse est rejetée, donc, il y a bien une relation entre ces 2 variables. On peut donc effectuer l'AFC après avoir fait une statistique descriptive. Cela nous permettra d'observer la popularité des genres en fonction de la région.
+
+```{r}
+s1 = colSums(jeu_donnees_grouped1)
+s1
+barplot(s1, las = 2)
+pie(s1)
+s2 = rowSums(jeu_donnees_grouped1)
+s2
+barplot(s2, las = 2)
+pie(s2)
+```
 
 ### AFC
 
 ```{r}
-# à continuer
+res = CA(jeu_donnees_grouped1)
+```
+
+```{r}
+res$eig
+barplot(res$eig[,2])
+```
+
+```{r}
+res$col$contrib
+```
+
+```{r}
+plot(res, axes = c(1,2), invisible = "row")
 ```
 
 ## Autres possibilités
