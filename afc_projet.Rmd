@@ -1,4 +1,4 @@
-# Projet
+# Projet - Partie AFC
 
 ## Ventes
 
@@ -8,10 +8,11 @@ L'objectif est d'observer des liaisons entre les variables qualitatives du jeu d
 jeu_donnees = read.csv("Video_Games_Sales_as_at_22_Dec_2016.csv")
 jeu_donnees <- na.omit(jeu_donnees) # on enlève les "NA"
 head(jeu_donnees)
+jeu_donnees$NA_Sales <- as.numeric(jeu_donnees$NA_Sales)
 jeu_donnees$User_Score <- as.numeric(jeu_donnees$User_Score)
 ```
 
-### Liaison entre 2 variables qualitatives
+## Jeux - Région
 
 ```{r}
 jeu_donnees_top <- jeu_donnees[jeu_donnees$Global_Sales >= 5.0,] # plus de 5 millions de ventes
@@ -25,11 +26,13 @@ chisq.test(sales_data_top)
 
 Les variations du nombre de ventes en fonction de la région peuvent dépendre du type de jeu. Comparons donc le genre des jeux à la région.
 
+## Genre - Région
+
 ```{r}
 library(dplyr)
 jeu_donnees_filtre1 <- jeu_donnees %>%
   group_by(Genre) %>%
-  filter(n() >= 100)
+  filter(n() >= 100) # Note : il y a au total 12 genres dans le jeu de données et il y a au moins 100 jeu pour chaque genre
 
 jeu_donnees_grouped1 <- jeu_donnees_filtre1 %>%
   group_by(Genre) %>%
@@ -42,7 +45,9 @@ jeu_donnees_grouped1 <- jeu_donnees_filtre1 %>%
 
 save1 <- jeu_donnees_grouped1$Genre
 jeu_donnees_grouped1 <- jeu_donnees_grouped1[,2:5]
-row.names(jeu_donnees_grouped1) = save1
+rownames(jeu_donnees_grouped1) <- save1
+
+#rownames(jeu_donnees_grouped1)
 
 head(jeu_donnees_grouped1)
 
@@ -62,8 +67,6 @@ barplot(s2, las = 2)
 pie(s2)
 ```
 
-### AFC
-
 ```{r}
 res = CA(jeu_donnees_grouped1)
 ```
@@ -71,19 +74,33 @@ res = CA(jeu_donnees_grouped1)
 ```{r}
 res$eig
 barplot(res$eig[,2])
+# Un axe semble suffire
 ```
 
 ```{r}
 res$col$contrib
+res$row$contrib
 ```
 
 ```{r}
-plot(res, axes = c(1,2), invisible = "row")
+rowSums(res$row$contrib)
 ```
 
-## Autres possibilités
+```{r}
+plot(res, axes = c(1,2), selectRow = "contrib 5")
+```
 
-Nous aurions pu également étudier les 2 liaisons ci-dessous. En effet, beaucoup d'entreprises peuvent avoir pour objectif de se concentrer sur le marché national. Donc, une société au Japon aura probablement plus de ventes au Japon.
+Un seul axe suffit donc à expliquer 92.6% de l'inertie, ce qui est amplement suffisant. D'ailleurs, le "6" correspondant au genre "Puzzle" apparait parmi les 5 ayant le plus contribué. Bien que la somme de ses contributions sur les 3 dimensions soit très faible, le "6" fait parti des genres ayant le plus de contributions sur la dimension 1 qui est celle qui explique presque l'entièreté de la liaison entre les 2 variables.
+
+On constate donc que l'axe 1 sépare le Japon du reste du monde concernant les ventes. En comparant les contributions au sein de la dimension 1, on peut interpréter que :
+
+-   Le public japonais est davantage intéressé par les jeux Role-Playing ("8")
+
+-   La popularité des jeux Shooter ("9") touche principalement l'Europe, l'Amérique du Nord.
+
+## Editeur - Région
+
+Nous pouvons également étudier d'autres liaisons. En effet, beaucoup d'entreprises peuvent avoir pour objectif de se concentrer sur le marché national. Donc, une société au Japon aura probablement plus de ventes au Japon.
 
 ```{r}
 # On regroupe les jeux par Publisher qu'on compare aux différentes régions.
@@ -109,6 +126,8 @@ head(jeu_donnees_grouped)
 chisq.test(jeu_donnees_grouped)
 ```
 
+## Plateforme - Région
+
 Les plateformes peuvent également jouer un rôle dans les ventes des différentes régions.
 
 ```{r}
@@ -133,4 +152,39 @@ row.names(jeu_donnees_grouped2) = save2
 head(jeu_donnees_grouped2)
 
 chisq.test(jeu_donnees_grouped2)
+```
+
+```{r}
+s4 = rowSums(jeu_donnees_grouped2)
+s4
+barplot(s4, las = 2)
+pie(s4)
+```
+
+```{r}
+res2 = CA(jeu_donnees_grouped2)
+```
+
+```{r}
+res2$eig
+barplot(res2$eig[,2])
+# 3 axes cette fois-ci
+```
+
+```{r}
+res2$col$contrib
+res2$row$contrib
+```
+
+```{r}
+plot(res2, axes = c(1,2), selectRow = "contrib 5")
+```
+
+```{r}
+plot(res2, axes = c(1,3), selectRow = "contrib 5")
+# On observe que l'axe 1 sépare le reste du monde au Japon
+```
+
+```{r}
+plot(res2, axes = c(2,3), selectRow = "contrib 5")
 ```
