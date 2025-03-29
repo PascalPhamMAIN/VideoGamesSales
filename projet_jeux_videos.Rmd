@@ -160,7 +160,7 @@ plot.PCA(res2_1, select = "cos2 0.8", habillage = 5)
 # On voit vraiment rien !
 ```
 
-### Tri par studio/éditeur
+### Tri par éditeur
 
 ```{r}
 library(ggplot2)
@@ -168,7 +168,7 @@ library(dplyr)
 
 sales_dev  <- jeu_donnees_top %>% group_by(Publisher) %>% 
   summarise(Number_of_Games=n(), Mean_Year_of_Release = mean(Year_of_Release), Mean_NA_Sales = mean(NA_Sales), Mean_EU_Sales = mean(EU_Sales), Mean_JP_Sales = mean(JP_Sales), Mean_Global_Sales = mean(Global_Sales), Mean_Critic_Score = mean(Critic_Score), Mean_User_Score = mean(User_Score))
-sales_dev %>% arrange(desc(Number_of_Games))
+sales_dev %>% arrange(desc(Mean_User_Score))
 ```
 
 ```{r}
@@ -178,6 +178,25 @@ res_dev
 
 ```{r}
 res_dev$eig
+res_dev$var$contrib
 plot(res_dev, choix="ind")
 plot(res_dev, choix="ind", axes=c(1,3))
+```
+
+```{r}
+sales_dev_2  <- jeu_donnees_top %>% group_by(Publisher) %>% 
+  summarise(Mean_NA_Sales = mean(NA_Sales), Mean_EU_Sales = mean(EU_Sales), Mean_JP_Sales = mean(JP_Sales), Mean_Global_Sales = mean(Global_Sales), Mean_Critic_Score = mean(Critic_Score), Mean_User_Score = mean(User_Score))
+sales_dev_2 %>% arrange(desc(Mean_Global_Sales))
+```
+
+```{r}
+res_dev_2 <- PCA(sales_dev_2,quali.sup = 1,scale.unit = TRUE)
+res_dev_2
+```
+
+```{r}
+res_dev_2$eig
+res_dev_2$var$contrib
+plot(res_dev_2, choix="ind")
+plot(res_dev_2, choix="ind", axes=c(1,3))
 ```
