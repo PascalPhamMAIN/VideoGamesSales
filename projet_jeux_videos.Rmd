@@ -7,6 +7,9 @@
 ```{r}
 jeu_donnees = read.csv("Video_Games_Sales_as_at_22_Dec_2016.csv")
 jeu_donnees <- na.omit(jeu_donnees) # on enlève les "NA"
+jeu_donnees$NA_Sales <- as.numeric(jeu_donnees$NA_Sales)
+jeu_donnees$User_Score <- as.numeric(jeu_donnees$User_Score)
+jeu_donnees$Year_of_Release <- as.numeric(jeu_donnees$Year_of_Release)
 head(jeu_donnees)
 ```
 
@@ -24,77 +27,20 @@ boxplot(sales_data, ylim = c(0, 0.5))
 ```
 
 ```{r}
-pairs(sales_data)
+# trop de jeux à faible ventes, en particulier au Japon
+jeu_donnees_top <- jeu_donnees[jeu_donnees$Global_Sales >= 5.0,]
+sales_data_top = jeu_donnees_top[, c("NA_Sales", "EU_Sales", "JP_Sales", "Other_Sales")]
+boxplot(sales_data_top, ylim = c(0, 10))
+```
+
+```{r}
+pairs(sales_data_top)
 #on voit pas bien s'il y a une droite, et donc les corrélations entre ces 4 données
 # je pense il faudrait qu'on garde qu'une catégorie pour qu'il y ait moins de données comme vu en TP pour mieux voir (on pourrait garder les jeux d'un seul développeur par exemple)
 ```
 
 ```{r}
 cov(sales_data)
-```
-
-```{r}
-taille = dim(sales_data)[1]
-taille
-cov(sales_data)*(taille-1)/taille
-# mini-corrélation entre NA et EU ?
-```
-
-### Centrer à la main
-
-```{r}
-p=4
-n=taille
-X1= matrix(NA, ncol=p, nrow = n) 
-for (j in 1:p) { X1[,j]=(sales_data[,j] - mean(sales_data[,j])) / (sd(sales_data[,j]) * sqrt((n-1)/n)) }
-#X1
-
-test1 <- scale(sales_data)
-#test1
-```
-
-```{r}
-S = (n - 1)/n * cov(X1)
-cov(X1)
-S
-eigen(S) #$values,$vectors
-```
-
-```{r}
-lambda = eigen(S)$values
-It <- sum(lambda)
-It
-It1 <- sum(diag(S))
-It1
-# logique vu que c'est normal centré donc It1 = It = p = 4
-part.inertie = lambda/sum(lambda)
-part.inertie
-barplot(part.inertie)
-# 0.18 bon ca reste ok mais pas 0.08 on garde 2 axes.
-```
-
-### Représentation des jeux dans le premier plan principal
-
-```{r}
-vecteurs_propres = eigen(S)$vectors
-F12 = X1 %*% vecteurs_propres[,1:2] 
-#colnames(F12) = paste("Dim", 1:2) 
-#plot(F12,xlab='Dim1',ylab='Dim2', xlim=c(-4,4), ylim=c(-2,2), type="n") 
-#text(F12,labels=row.names(notes),cex=1.5)
-#title(main="représentation des ndividus") 
-#abline(h=0) 
-#abline(v=0)
-```
-
-### Représentation des variables
-
-```{r}
-cercle_correlation=cor(X1,F12) 
-a=seq(0,2* pi,length=100) 
-plot(cos(a), sin(a), type='l',lty=3,xlab='Dim 1', ylab='Dim 2',main="Cercle des corrélations" ) 
-arrows(0,0,cercle_correlation[,1],cercle_correlation[,2],col=2) 
-text(cercle_correlation,labels=colnames(sales_data))
-# Cela confirme notre théorie : Les ventes en Europe et en Amérique du Nord sont corrélées.
 ```
 
 ### Qualité de la représentation d’un individu
@@ -118,16 +64,26 @@ library(FactoMineR)
 ```
 
 ```{r}
-#jeu_donnees$User_Score = as.factor(jeu_donnees$User_Score)
-#jeu_donnees$Rating <- as.factor(jeu_donnees$Rating)
-jeu_donnees$User_Score <- as.numeric(jeu_donnees$User_Score)
-var_tot <- jeu_donnees[, c("NA_Sales", "EU_Sales", "JP_Sales", "Other_Sales","Critic_Score","Critic_Count","User_Score","User_Count")]
+var_tot <- jeu_donnees[, c("Year_of_Release","NA_Sales", "EU_Sales", "JP_Sales", "Other_Sales","Critic_Score","Critic_Count","User_Score","User_Count")]
 res <- PCA(sales_data) # scale.unit = TRUE pour des variables centrées réduites
 res
 res1 <- PCA(var_tot)
 res1
 var_avis <- jeu_donnees[, c("Critic_Score","Critic_Count","User_Score","User_Count")]
 res2 <- PCA(var_avis)
+res2
+#les variables sont globalement bien représentées pour res et res2 mais pas res1
+#pour les individus, la majorité d'entre eux sont mal représentés (trop proche de 0)
+```
+
+```{r}
+var_tot_top <- jeu_donnees_top[, c("Year_of_Release","NA_Sales", "EU_Sales", "JP_Sales", "Other_Sales","Critic_Score","Critic_Count","User_Score","User_Count")]
+res <- PCA(sales_data_top) # scale.unit = TRUE pour des variables centrées réduites
+res
+res1 <- PCA(var_tot_top)
+res1
+var_avis_top <- jeu_donnees_top[, c("Critic_Score","Critic_Count","User_Score","User_Count")]
+res2 <- PCA(var_avis_top)
 res2
 #les variables sont globalement bien représentées pour res et res2 mais pas res1
 #pour les individus, la majorité d'entre eux sont mal représentés (trop proche de 0)
@@ -187,10 +143,10 @@ Il faudrait surement 3 dimensions. Y-a-t-il un lien avec le rating (correspondan
 
 ```{r}
 #jeu_donnees$Rating <- droplevels(jeu_donnees$Rating)
-jeu_donnees$Rating[jeu_donnees$Rating == ""] <- "NoRating"
-jeu_donnees$Rating <- as.factor(jeu_donnees$Rating)  # Reconversion en facteur
-levels(jeu_donnees$Rating)
-var_avis1 <- jeu_donnees[, c("Critic_Score","Critic_Count","User_Score","User_Count","Rating")]
+jeu_donnees_top$Rating[jeu_donnees_top$Rating == ""] <- "NoRating"
+jeu_donnees_top$Rating <- as.factor(jeu_donnees_top$Rating)  # Reconversion en facteur
+levels(jeu_donnees_top$Rating)
+var_avis1 <- jeu_donnees_top[, c("Critic_Score","Critic_Count","User_Score","User_Count","Rating")]
 head(var_avis1)
 res2_1 <- PCA(var_avis1, quali.sup = 5)
 #head(res2_1)
@@ -204,8 +160,24 @@ plot.PCA(res2_1, select = "cos2 0.8", habillage = 5)
 # On voit vraiment rien !
 ```
 
-### On peut faire qu'avec les jeux Nintendo ?
+### Tri par studio/éditeur
 
 ```{r}
-sales_nintendo = jeu_donnees[jeu_donnees$Developer == "Nintendo",]
+library(ggplot2)
+library(dplyr)
+
+sales_dev  <- jeu_donnees_top %>% group_by(Publisher) %>% 
+  summarise(Number_of_Games=n(), Mean_Year_of_Release = mean(Year_of_Release), Mean_NA_Sales = mean(NA_Sales), Mean_EU_Sales = mean(EU_Sales), Mean_JP_Sales = mean(JP_Sales), Mean_Global_Sales = mean(Global_Sales), Mean_Critic_Score = mean(Critic_Score), Mean_User_Score = mean(User_Score))
+sales_dev %>% arrange(desc(Number_of_Games))
+```
+
+```{r}
+res_dev <- PCA(sales_dev,quali.sup = 1,scale.unit = TRUE)
+res_dev
+```
+
+```{r}
+res_dev$eig
+plot(res_dev, choix="ind")
+plot(res_dev, choix="ind", axes=c(1,3))
 ```
