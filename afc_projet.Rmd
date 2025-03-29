@@ -1,0 +1,112 @@
+# Projet
+
+## Ventes
+
+L'objectif est d'observer des liaisons entre les variables qualitatives du jeu de données. On va donc tester différentes variables qualitatives à comparer avec les régions d'Amérique du Nord, d'Europe, du Japon et les autres régions en fonction du nombre de ventes réalisées par chacune.
+
+```{r}
+jeu_donnees = read.csv("Video_Games_Sales_as_at_22_Dec_2016.csv")
+jeu_donnees <- na.omit(jeu_donnees) # on enlève les "NA"
+head(jeu_donnees)
+jeu_donnees$User_Score <- as.numeric(jeu_donnees$User_Score)
+```
+
+### Liaison entre 2 variables qualitatives
+
+```{r}
+jeu_donnees_top <- jeu_donnees[jeu_donnees$Global_Sales >= 5.0,] # plus de 5 millions de ventes
+sales_data_top = jeu_donnees_top[, c("NA_Sales", "EU_Sales", "JP_Sales", "Other_Sales")]
+boxplot(sales_data_top)
+boxplot(sales_data_top, ylim = c(0, 10))
+chisq.test(sales_data_top)
+
+# On ne rejette pas le test de Khi-deux (p-valeur >> 0.05), donc il n'y a pas de relations entre le nom des jeux et les régions.
+```
+
+Les variations du nombre de ventes en fonction de la région peuvent dépendre du type de jeu. Comparons donc le genre des jeux à la région.
+
+```{r}
+library(dplyr)
+jeu_donnees_filtre1 <- jeu_donnees %>%
+  group_by(Genre) %>%
+  filter(n() >= 100)
+
+jeu_donnees_grouped1 <- jeu_donnees_filtre1 %>%
+  group_by(Genre) %>%
+  summarise(
+    NA_Sales = sum(NA_Sales, na.rm = TRUE),
+    EU_Sales = sum(EU_Sales, na.rm = TRUE),
+    JP_Sales = sum(JP_Sales, na.rm = TRUE),
+    Other_Sales = sum(Other_Sales, na.rm = TRUE)
+  )
+
+save1 <- jeu_donnees_grouped1$Genre
+jeu_donnees_grouped1 <- jeu_donnees_grouped1[,2:5]
+row.names(jeu_donnees_grouped1) = save1
+
+head(jeu_donnees_grouped1)
+
+chisq.test(jeu_donnees_grouped1)
+```
+
+La p-valeur est largement inférieure à 0.05, l'hypothèse est rejetée, donc, il y a bien une relation entre ces 2 variables. On peut donc effectuer l'AFC.
+
+### AFC
+
+```{r}
+# à continuer
+```
+
+## Autres possibilités
+
+Nous aurions pu également étudier les 2 liaisons ci-dessous. En effet, beaucoup d'entreprises peuvent avoir pour objectif de se concentrer sur le marché national. Donc, une société au Japon aura probablement plus de ventes au Japon.
+
+```{r}
+# On regroupe les jeux par Publisher qu'on compare aux différentes régions.
+jeu_donnees_filtre <- jeu_donnees %>%
+  group_by(Publisher) %>%
+  filter(n() >= 100) # Pour plus de pertinence, nous gardons ceux avec au moins 100 jeux dans le jeu de données.
+
+jeu_donnees_grouped <- jeu_donnees_filtre %>%
+  group_by(Publisher) %>%
+  summarise(
+    NA_Sales = sum(NA_Sales, na.rm = TRUE),
+    EU_Sales = sum(EU_Sales, na.rm = TRUE),
+    JP_Sales = sum(JP_Sales, na.rm = TRUE),
+    Other_Sales = sum(Other_Sales, na.rm = TRUE)
+  )
+
+save <- jeu_donnees_grouped$Publisher
+jeu_donnees_grouped <- jeu_donnees_grouped[,2:5]
+row.names(jeu_donnees_grouped) = save
+
+head(jeu_donnees_grouped)
+
+chisq.test(jeu_donnees_grouped)
+```
+
+Les plateformes peuvent également jouer un rôle dans les ventes des différentes régions.
+
+```{r}
+# Comparons avec les plateformes.
+jeu_donnees_filtre2 <- jeu_donnees %>%
+  group_by(Platform) %>%
+  filter(n() >= 100)
+
+jeu_donnees_grouped2 <- jeu_donnees_filtre2 %>%
+  group_by(Platform) %>%
+  summarise(
+    NA_Sales = sum(NA_Sales, na.rm = TRUE),
+    EU_Sales = sum(EU_Sales, na.rm = TRUE),
+    JP_Sales = sum(JP_Sales, na.rm = TRUE),
+    Other_Sales = sum(Other_Sales, na.rm = TRUE)
+  )
+
+save2 <- jeu_donnees_grouped2$Platform
+jeu_donnees_grouped2 <- jeu_donnees_grouped2[,2:5]
+row.names(jeu_donnees_grouped2) = save2
+
+head(jeu_donnees_grouped2)
+
+chisq.test(jeu_donnees_grouped2)
+```
