@@ -1,0 +1,49 @@
+# Clustering
+
+```{r}
+jeu_donnees = read.csv("Video_Games_Sales_as_at_22_Dec_2016.csv")
+jeu_donnees <- na.omit(jeu_donnees) # on enlève les "NA"
+head(jeu_donnees)
+jeu_donnees$NA_Sales <- as.numeric(jeu_donnees$NA_Sales)
+jeu_donnees$User_Score <- as.numeric(jeu_donnees$User_Score)
+```
+
+```{r}
+jeu_donnees_top <- jeu_donnees[jeu_donnees$Global_Sales >= 10.0,] # plus de 15 millions de ventes
+sales_data_top = jeu_donnees_top[, c("Name","NA_Sales", "EU_Sales", "JP_Sales", "Other_Sales")]
+pairs(sales_data_top[,2:5])
+```
+
+```{r}
+data_top1 = scale(sales_data_top[,2:5])
+data_top1
+d.data_top = dist(data_top1)
+hc <- hclust(d.data_top, method = "ward.D2")
+plot(hc)
+# A l'oeil nu, on peut garder 5 classes
+plot(hc,labels=sales_data_top[,1], cex = 0.5, hang=-1)
+rect.hclust(hc, k = 5)
+```
+
+```{r}
+barplot(hc$height) # Cela confirme qu'il y a une perte d'inertie inter-classe significative dès lorsqu'on passe de 5 à 4 classes, or on veut la maximiser
+```
+
+```{r}
+groupes.cah <- cutree(hc, k = 5)
+groupes.cah
+table(groupes.cah)
+table(sales_data_top[,1], groupes.cah)
+summary(groupes.cah)
+
+# Note : on remarque les jeux ayant le même nom (mais sur différentes plateformes) appartiennent aux mêmes groupes
+```
+
+```{r}
+K = dim(sales_data_top)[2]
+for (i in 1:K){ 
+  cat("groupe", i,"\n")
+  I=which(groupes.cah==i)
+  print(sales_data_top[,1][I]) 
+}
+```
