@@ -14,6 +14,8 @@ sales_data_top = jeu_donnees_top[, c("Name","NA_Sales", "EU_Sales", "JP_Sales", 
 pairs(sales_data_top[,2:5])
 ```
 
+## Recherche des groupes
+
 ```{r}
 data_top1 = scale(sales_data_top[,2:5])
 data_top1
@@ -40,10 +42,44 @@ summary(groupes.cah)
 ```
 
 ```{r}
-K = dim(sales_data_top)[2]
+K = 5 # 5 groupes
 for (i in 1:K){ 
   cat("groupe", i,"\n")
   I=which(groupes.cah==i)
   print(sales_data_top[,1][I]) 
 }
+```
+
+## Caractéristique des groupes
+
+```{r}
+aggregate(sales_data_top[,2:5], by = list(groupes.cah), FUN = mean)
+```
+
+**On peut déjà observer quelques éléments :**
+
+-   Le groupe 1 est composé d'un seul jeu, il a pour particularité d'avoir le plus grand nombre de ventes dans le jeu de données et a énormément de succès en Occident.
+
+-   Le groupe 2 a tout type de public tandis que pour le groupe 2, on note tout de même qu'il y a peu de ventes en dehors de l'Amérique du Nord, l'Europe et le Japon. Les 2 groupes sont donc assez proches, par ailleurs, il était également cohérent selon le boxplot de ne prendre que 4 groupes. Dans ce cas, les groupes 2 et 5 n'auraient formés qu'un seul groupe.
+
+-   Le groupe 3 regroupe des jeux touchant le monde entier sauf le Japon.
+
+-   Le groupe 4 comprend des jeux qui n'ont pas bien marché en Europe, ni au Japon.
+
+## Kmeans
+
+```{r}
+kmeans.result <- kmeans(data_top1,centers=5)
+kmeans.result$centers
+kmeans.result$cluster
+table(kmeans.result$cluster)
+```
+
+On va initialiser avec CAH
+
+```{r}
+init <- matrix(NA, nrow=5, ncol=dim(sales_data_top)[2]-1)
+colnames(init)=colnames(sales_data_top[2:ncol(sales_data_top)])
+#for (i in 1:K) init[i,] <- colMeans(data_top1[groupes.cah==i,])
+init
 ```
