@@ -47,3 +47,7 @@ arbre.opt <- prune(arbre,cp=cp.opt)
 rpart.plot(arbre.opt, type=4)
 #dev.off()
 ```
+
+### Interprétation
+
+On peut constater que les jeux plus anciens reçoivent peu d'avis, la raison principale est qu'ils ont souvent peu d'utilisateurs. En effet, avec Internet, de plus en plus de personnes s'intéressent aux jeux-videos et leur accès est également accru.
