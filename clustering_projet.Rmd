@@ -9,7 +9,7 @@ jeu_donnees$User_Score <- as.numeric(jeu_donnees$User_Score)
 ```
 
 ```{r}
-jeu_donnees_top <- jeu_donnees[jeu_donnees$Global_Sales >= 10.0,] # plus de 15 millions de ventes
+jeu_donnees_top <- jeu_donnees[jeu_donnees$Global_Sales >= 5.0,] # plus de 15 millions de ventes
 sales_data_top = jeu_donnees_top[, c("Name","NA_Sales", "EU_Sales", "JP_Sales", "Other_Sales")]
 pairs(sales_data_top[,2:5])
 ```
@@ -65,6 +65,8 @@ aggregate(sales_data_top[,2:5], by = list(groupes.cah), FUN = mean)
 -   Le groupe 3 regroupe des jeux touchant le monde entier sauf le Japon.
 
 -   Le groupe 4 comprend des jeux qui n'ont pas bien marché en Europe, ni au Japon.
+
+-   Le groupe 5 est celui des jeux peu vendus en général, sans grande distinction de région.
 
 ## Kmeans
 

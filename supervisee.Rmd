@@ -12,19 +12,23 @@ jeu_donnees <- na.omit(jeu_donnees) # on enlève les "NA"
 head(jeu_donnees)
 ```
 
-On ajoute une variable New, qui indique si le jeu est sorti après 2007 (inclus) ou non.
+## I) Date de sortie
+
+On ajoute une variable New, qui indique si le jeu est sorti après 2007 (inclus) ou non. On enlève l'année de sortie des jeux qui explique entièrement la variable New, mais également la console, car celle-ci dépent directement de la date. On ne garde que les ventes et les notes.
 
 ```{r}
-jeu_donnees$New <- as.factor(ifelse(jeu_donnees$Year_of_Release >= 2007, 1, 0))
-table(jeu_donnees$New)
+data_num = jeu_donnees
+head(data_num)
+data_num$New <- as.factor(ifelse(data_num$Year_of_Release >= 2007, 1, 0))
+table(data_num$New)
+data_num = data_num[,-c(1,2,3,4,5,15,16)]
+head(data_num)
 ```
 
 ## Arbre CART
 
 ```{r}
 library(rpart)
-data_num = jeu_donnees[,-c(1,2,3,4,5,15,16)] # On enlève l'année de sortie des jeux qui explique entièrement la variable New
-head(data_num)
 arbre=rpart(New~.,data_num)
 ```
 
@@ -51,3 +55,116 @@ rpart.plot(arbre.opt, type=4)
 ### Interprétation
 
 On peut constater que les jeux plus anciens reçoivent peu d'avis, la raison principale est qu'ils ont souvent peu d'utilisateurs. En effet, avec Internet, de plus en plus de personnes s'intéressent aux jeux-videos et leur accès est également accru.
+
+On va regarder si il est possible de deviner si le jeu est récent avec ces données.
+
+### Échantillons
+
+```{r}
+set.seed(1)
+n <- nrow(data_num)
+p <- ncol(data_num)-1
+test.ratio <- .2 # ratio of test/train samples
+n.test <- round(n*test.ratio)
+n.test
+tr <- sample(1:n,n.test)
+data_num.test <- data_num[tr,]
+data_num.train <- data_num[-tr,]
+
+table(data_num.test$New)
+```
+
+### RandomForest
+
+```{r}
+library("randomForest")
+fit_RF <- randomForest(New ~., data = data_num.train)
+fit_RF
+plot(fit_RF)
+# Les deux erreurs sont assez élevées, en particulier les faux positifs de 0 (25%). Il est donc peu probable que le modèle prédisse efficacement l'ancienneté.
+```
+
+```{r}
+pred_rF = predict(fit_RF, data_num.test)
+pred_rf_fix = as.numeric(pred_rF) - 1
+Dtest_s = as.numeric(data_num.test$New) - 1
+mean(Dtest_s == 1*(pred_rf_fix>0.5))
+table(Dtest_s,1*(pred_rf_fix>0.5))
+# De manière assez attendue, le taux de bonne prédiction est d'environ 80%. Cela n'est pas très impressionnant même si significativement mieux que le hasard. On peut donc penser que la date de sortie du jeu n'influent pas suffisament sur les données concernant les ventes et les notes pour permettre une prédiction extrèmement fiable.
+```
+
+### AIC
+
+```{r}
+library(MASS)
+res_AIC <- glm(New ~ ., family = binomial , data=data_num.train)
+```
+
+```{r}
+pred_AIC = predict(res_AIC, newdata=data_num.test , type="response")
+mean(Dtest_s == 1*(pred_AIC>0.5))
+table(Dtest_s,1*(pred_AIC>0.5))
+# On obtient 70% de réussite, soit pire qu'avec RandomForest.
+```
+
+### LDA / QDA
+
+```{r}
+res_lda = lda(New~., data=data_num.train)
+summary(res_lda)
+
+res_qda = qda(New~., data=data_num.train)
+summary(res_qda)
+```
+
+```{r}
+pred_lda = predict(res_lda, newdata = data_num.test)$posterior[,2] 
+pred_qda = predict(res_qda, newdata = data_num.test)$posterior[,2] 
+
+table(1*(pred_lda>0.5),data_num.test$New)
+mean(data_num.test$New == 1*(pred_lda>0.5))
+
+table(1*(pred_qda>0.5),data_num.test$New)
+mean(data_num.test$New == 1*(pred_qda>0.5))
+# La LDA et la QDA on également environ 70% de réussite.
+```
+
+### Régression Lasso
+
+```{r}
+library("glmnet")
+res_Lasso <- glmnet(as.matrix(data_num.train[,-1]), data_num.train$New, family='binomial')
+summary(res_Lasso)
+```
+
+```{r}
+cvLasso <- cv.glmnet(as.matrix(data_num.train[,-1]),data_num.train$New,family="binomial",type.measure = "class")
+plot(cvLasso)
+log(cvLasso$lambda.min)
+coef(res_Lasso, s=cvLasso$lambda.min)
+```
+
+```{r}
+library(pROC)
+pred_logit_lasso=predict(cvLasso, newx = as.matrix(data_num.test[,-1]), s = 'lambda.min', type = "response")
+ROC_logit_lasso = roc(data_num.test$New, pred_logit_lasso)
+ROC_logit_lasso$auc 
+```
+
+```{r}
+#pred_logit_lasso
+```
+
+```{r}
+table(1*(pred_logit_lasso>0.5),data_num.test$New)
+mean(data_num.test$New == 1*(pred_logit_lasso>0.5))
+# Hummmmmmmmm kinda sus ngl
+```
+
+### Adaboost
+
+```{r}
+library("gbm")
+fit.adaboost = gbm(New ~., data_num.train, distribution = "adaboost")
+predict_adaboost = predict.gbm(fit.adaboost,data_num.test)
+```
