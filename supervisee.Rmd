@@ -58,7 +58,7 @@ On peut constater que les jeux plus anciens reçoivent peu d'avis, la raison pri
 
 On va regarder si il est possible de deviner si le jeu est récent avec ces données.
 
-### Échantillons
+## Échantillons
 
 ```{r}
 set.seed(1)
@@ -165,6 +165,8 @@ mean(data_num.test$New == 1*(pred_logit_lasso>0.5))
 
 ```{r}
 library("gbm")
-fit.adaboost = gbm(New ~., data_num.train, distribution = "adaboost")
+fit.adaboost = gbm(as.numeric(New)-1 ~., data_num.train, distribution = "adaboost")
 predict_adaboost = predict.gbm(fit.adaboost,data_num.test)
+class_adaboost <- 1*(predict_adaboost >1/2)
+table(class_adaboost, data_num.test$New)
 ```
