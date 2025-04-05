@@ -133,12 +133,12 @@ mean(data_num.test$New == 1*(pred_qda>0.5))
 
 ```{r}
 library("glmnet")
-res_Lasso <- glmnet(as.matrix(data_num.train[,-1]), data_num.train$New, family='binomial')
+res_Lasso <- glmnet(as.matrix(data_num.train[,-10]), data_num.train$New, family='binomial')
 summary(res_Lasso)
 ```
 
 ```{r}
-cvLasso <- cv.glmnet(as.matrix(data_num.train[,-1]),data_num.train$New,family="binomial",type.measure = "class")
+cvLasso <- cv.glmnet(as.matrix(data_num.train[,-c(10)]),data_num.train$New,family="binomial",type.measure = "class")
 plot(cvLasso)
 log(cvLasso$lambda.min)
 coef(res_Lasso, s=cvLasso$lambda.min)
@@ -170,3 +170,132 @@ predict_adaboost = predict.gbm(fit.adaboost,data_num.test)
 class_adaboost <- 1*(predict_adaboost >1/2)
 table(class_adaboost, data_num.test$New)
 ```
+
+## II) Note de la presse
+
+Cette fois on cherche à prédire la note des critiques en fonction des mêmes paramètres que précédemment (plus la date).
+
+```{r}
+data_crit = jeu_donnees
+head(data_crit)
+table(data_crit$Critic_Score)
+data_crit = data_crit[,-c(1,2,3,4,5,15,16)]
+head(data_crit)
+```
+
+## Arbre CART
+
+```{r}
+library(rpart)
+arbre=rpart(Critic_Score~.,data_crit)
+```
+
+```{r}
+library(rpart.plot)
+rpart.plot(arbre, type=4, digits=3,roundint=FALSE)
+```
+
+### Arbre optimal
+
+```{r}
+set.seed(1)
+cp.opt <- arbre$cptable[which.min(arbre$cptable[, "xerror"]), "CP"]
+cp.opt
+```
+
+```{r}
+arbre.opt <- prune(arbre,cp=cp.opt)
+#png("arbre_opt.png", width = 2000, height = 1500, res = 200)
+rpart.plot(arbre.opt, type=4)
+#dev.off()
+# Cet arbre ne prend en compte finalement que 3 paramètres en compte : User_Score, User_Count, NA_Sales.
+```
+
+### Interprétation
+
+La note de la presse ne semble pas vraiment dépendre du nombre de vente car il n'est pas (ou peu) pris en compte dans l'arbre optimal CART.
+
+On va regarder si cela suffit à prédire efficacement la note de la presse
+
+## Échantillons
+
+```{r}
+set.seed(1)
+n <- nrow(data_crit)
+p <- ncol(data_crit)-1
+test.ratio <- .2 # ratio of test/train samples
+n.test <- round(n*test.ratio)
+n.test
+tr <- sample(1:n,n.test)
+data_crit.test <- data_crit[tr,]
+data_crit.train <- data_crit[-tr,]
+
+table(data_crit.test$Critic_Score)
+```
+
+### RandomForest
+
+```{r}
+library("randomForest")
+fit_RF <- randomForest(Critic_Score ~., data = data_crit.train)
+fit_RF
+plot(fit_RF)
+# Le modèle prévoit environ 90 erreurs pour un grand nombre d'arbres.
+```
+
+```{r}
+pred_rF = predict(fit_RF, data_crit.test)
+pred_rf_fix = as.numeric(pred_rF) - 1
+Dtest_s = data_crit.test$Critic_Score
+Dtest_s_mean = mean(Dtest_s)
+Err = sum((Dtest_s-pred_rf_fix)^2)/sum((Dtest_s-Dtest_s_mean)^2)
+Err
+Err_diff = mean(abs(Dtest_s-pred_rf_fix))
+Err_diff
+# En moyenne, la prédiction du modèle avec RandomForest se trompe d'un écart de 7.16 points.
+```
+
+### Régression gaussienne
+
+```{r}
+library("glmnet")
+res_Gauss <- glmnet(as.matrix(data_crit.train[,-6]), data_crit.train$Critic_Score, family='gaussian')
+summary(res_Gauss)
+```
+
+```{r}
+cvGauss <- cv.glmnet(as.matrix(data_crit.train[,-6]),data_crit.train$Critic_Score,family="gaussian")
+plot(cvGauss)
+log(cvGauss$lambda.min)
+coef(res_Gauss, s=cvGauss$lambda.min)
+```
+
+```{r}
+library(pROC)
+pred_logit_gauss=predict(cvGauss, newx = as.matrix(data_crit.test[,-6]), s = 'lambda.min', type = "link")
+```
+
+```{r}
+Err = sum((Dtest_s-pred_logit_gauss)^2)/sum((Dtest_s-Dtest_s_mean)^2)
+Err
+Err_diff = mean(abs(Dtest_s-pred_logit_gauss))
+Err_diff
+# En moyenne, la prédiction du modèle avec régression se trompe d'un écart de 7.91 points.
+```
+
+### Adaboost
+
+```{r}
+library("gbm")
+fit.adaboost = gbm(Critic_Score ~., data_crit.train, distribution = "gaussian")
+predict_adaboost = predict.gbm(fit.adaboost,data_crit.test)
+Err = sum((Dtest_s-predict_adaboost)^2)/sum((Dtest_s-Dtest_s_mean)^2)
+Err
+Err_diff = mean(abs(Dtest_s-predict_adaboost))
+Err_diff
+# En moyenne, la prédiction du modèle avec Adaboost se trompe d'un écart de 7.36 points.
+```
+
+### VERDICT :
+
+Le modèle RandomForest est sensiblement meilleur que Adaboose ou la régression linéaire, mais les trois ont de résultats assez proches. On semble donc pourvoir prédire la note de la presse avec une moyenne de 7.16 d'écart. En sachant que la note de la presse peut varier entre 13 et 98 sur notre jeu de données, il s'agit d'un résultat relativement convaincant (en tout cas bien meilleur que le hasard).
