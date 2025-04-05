@@ -1,0 +1,49 @@
+# Classification supervisée
+
+```{r}
+jeu_donnees = read.csv("Video_Games_Sales_as_at_22_Dec_2016.csv")
+
+jeu_donnees$User_Score[jeu_donnees$User_Score == "tbd"] <- NA
+jeu_donnees$User_Score <- as.numeric(jeu_donnees$User_Score)
+jeu_donnees$NA_Sales <- as.numeric(jeu_donnees$NA_Sales)
+jeu_donnees$Year_of_Release <- as.numeric(jeu_donnees$Year_of_Release)
+jeu_donnees$Name <- make.unique(as.character(jeu_donnees$Name))
+jeu_donnees <- na.omit(jeu_donnees) # on enlève les "NA"
+head(jeu_donnees)
+```
+
+On ajoute une variable New, qui indique si le jeu est sorti après 2006 ou non.
+
+```{r}
+jeu_donnees$New <- as.factor(ifelse(jeu_donnees$Year_of_Release >= 2006, 1, 0))
+table(jeu_donnees$New)
+```
+
+## Arbre CART
+
+```{r}
+library(rpart)
+data_num = jeu_donnees[,-c(1,2,3,4,5,15,16)] # On enlève l'année de sortie des jeux qui explique entièrement la variable New
+head(data_num)
+arbre=rpart(New~.,data_num)
+```
+
+```{r}
+library(rpart.plot)
+rpart.plot(arbre, type=4, digits=3,roundint=FALSE)
+```
+
+### Arbre optimal
+
+```{r}
+set.seed(1)
+cp.opt <- arbre$cptable[which.min(arbre$cptable[, "xerror"]), "CP"]
+cp.opt
+```
+
+```{r}
+arbre.opt <- prune(arbre,cp=cp.opt)
+#png("arbre_opt.png", width = 2000, height = 1500, res = 200)
+rpart.plot(arbre.opt, type=4)
+#dev.off()
+```
