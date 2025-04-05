@@ -12,10 +12,10 @@ jeu_donnees <- na.omit(jeu_donnees) # on enlève les "NA"
 head(jeu_donnees)
 ```
 
-On ajoute une variable New, qui indique si le jeu est sorti après 2006 ou non.
+On ajoute une variable New, qui indique si le jeu est sorti après 2007 (inclus) ou non.
 
 ```{r}
-jeu_donnees$New <- as.factor(ifelse(jeu_donnees$Year_of_Release >= 2006, 1, 0))
+jeu_donnees$New <- as.factor(ifelse(jeu_donnees$Year_of_Release >= 2007, 1, 0))
 table(jeu_donnees$New)
 ```
 
