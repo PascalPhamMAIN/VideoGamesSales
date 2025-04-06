@@ -62,7 +62,7 @@ aggregate(sales_data_top[,2:5], by = list(groupes.cah), FUN = mean)
 
 -   Le groupe 1 est composé d'un seul jeu, il a pour particularité d'avoir le plus grand nombre de ventes dans le jeu de données et a énormément de succès en Occident.
 
--   Le groupe 2 a tout type de public tandis que pour le groupe 2, on note tout de même qu'il y a peu de ventes en dehors de l'Amérique du Nord, l'Europe et le Japon. Les 2 groupes sont donc assez proches, par ailleurs, il était également cohérent selon le boxplot de ne prendre que 4 groupes. Dans ce cas, les groupes 2 et 5 n'auraient formés qu'un seul groupe.
+-   Le groupe 2 a tout type de public tandis que pour le groupe 5, on note tout de même qu'il y a peu de ventes en dehors de l'Amérique du Nord, l'Europe et le Japon. Les 2 groupes sont donc assez proches, par ailleurs, il était également cohérent selon le boxplot de ne prendre que 4 groupes. Dans ce cas, les groupes 2 et 5 n'auraient formés qu'un seul groupe.
 
 -   Le groupe 3 regroupe des jeux touchant le monde entier sauf le Japon.
 
