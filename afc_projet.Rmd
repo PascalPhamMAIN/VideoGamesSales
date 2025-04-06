@@ -5,6 +5,10 @@
 L'objectif est d'observer des liaisons entre les variables qualitatives du jeu de données. On va donc tester différentes variables qualitatives à comparer avec les régions d'Amérique du Nord, d'Europe, du Japon et les autres régions en fonction du nombre de ventes réalisées par chacune.
 
 ```{r}
+library(FactoMineR)
+```
+
+```{r}
 jeu_donnees = read.csv("Video_Games_Sales_as_at_22_Dec_2016.csv")
 jeu_donnees <- na.omit(jeu_donnees) # on enlève les "NA"
 head(jeu_donnees)
@@ -12,7 +16,7 @@ jeu_donnees$NA_Sales <- as.numeric(jeu_donnees$NA_Sales)
 jeu_donnees$User_Score <- as.numeric(jeu_donnees$User_Score)
 ```
 
-## Jeux - Région
+### Jeux - Région
 
 ```{r}
 jeu_donnees_top <- jeu_donnees[jeu_donnees$Global_Sales >= 5.0,] # plus de 5 millions de ventes
@@ -21,12 +25,12 @@ boxplot(sales_data_top)
 boxplot(sales_data_top, ylim = c(0, 10))
 chisq.test(sales_data_top)
 
-# On ne rejette pas le test de Khi-deux (p-valeur >> 0.05), donc il n'y a pas de relations entre le nom des jeux et les régions.
+# On ne rejette pas le test de Khi-deux (p-valeur >> 0.05), donc il n'y a pas de relations entre le nom des jeux et les régions. On pouvait s'y attendre : la tendance pour certains jeux dans une région ne dépend pas de son nom mais de comment il a été produit et de son genre.
 ```
 
 Les variations du nombre de ventes en fonction de la région peuvent dépendre du type de jeu. Comparons donc le genre des jeux à la région.
 
-## Genre - Région
+### Genre - Région
 
 ```{r}
 library(dplyr)
@@ -41,7 +45,8 @@ jeu_donnees_grouped1 <- jeu_donnees_filtre1 %>%
     EU_Sales = sum(EU_Sales, na.rm = TRUE),
     JP_Sales = sum(JP_Sales, na.rm = TRUE),
     Other_Sales = sum(Other_Sales, na.rm = TRUE)
-  )
+  ) %>%
+  as.data.frame()
 
 save1 <- jeu_donnees_grouped1$Genre
 jeu_donnees_grouped1 <- jeu_donnees_grouped1[,2:5]
@@ -90,15 +95,15 @@ rowSums(res$row$contrib)
 plot(res, axes = c(1,2), selectRow = "contrib 5")
 ```
 
-Un seul axe suffit donc à expliquer 92.6% de l'inertie, ce qui est amplement suffisant. D'ailleurs, le "6" correspondant au genre "Puzzle" apparait parmi les 5 ayant le plus contribué. Bien que la somme de ses contributions sur les 3 dimensions soit très faible, le "6" fait parti des genres ayant le plus de contributions sur la dimension 1 qui est celle qui explique presque l'entièreté de la liaison entre les 2 variables.
+Un seul axe suffit donc à expliquer 92.6% de l'inertie, ce qui est amplement suffisant. D'ailleurs, le genre "Puzzle" apparait parmi les 5 ayant le plus contribué. Bien que la somme de ses contributions sur les 3 dimensions soit très faible, le puzzle fait parti des genres ayant le plus de contributions sur la dimension 1 qui est celle qui explique presque l'entièreté de la liaison entre les 2 variables.
 
 On constate donc que l'axe 1 sépare le Japon du reste du monde concernant les ventes. En comparant les contributions au sein de la dimension 1, on peut interpréter que :
 
--   Le public japonais est davantage intéressé par les jeux Role-Playing ("8")
+-   Le public japonais est davantage intéressé par les jeux Role-Playing.
 
--   La popularité des jeux Shooter ("9") touche principalement l'Europe, l'Amérique du Nord.
+-   La popularité des jeux Shooter, Sports ou Action touche principalement l'Europe, l'Amérique du Nord.
 
-## Editeur - Région
+### Editeur - Région
 
 Nous pouvons également étudier d'autres liaisons. En effet, beaucoup d'entreprises peuvent avoir pour objectif de se concentrer sur le marché national. Donc, une société au Japon aura probablement plus de ventes au Japon.
 
@@ -115,7 +120,8 @@ jeu_donnees_grouped <- jeu_donnees_filtre %>%
     EU_Sales = sum(EU_Sales, na.rm = TRUE),
     JP_Sales = sum(JP_Sales, na.rm = TRUE),
     Other_Sales = sum(Other_Sales, na.rm = TRUE)
-  )
+  ) %>%
+  as.data.frame()
 
 save <- jeu_donnees_grouped$Publisher
 jeu_donnees_grouped <- jeu_donnees_grouped[,2:5]
@@ -126,7 +132,36 @@ head(jeu_donnees_grouped)
 chisq.test(jeu_donnees_grouped)
 ```
 
-## Plateforme - Région
+```{r}
+s3 = rowSums(jeu_donnees_grouped)
+s3
+barplot(s3, las = 2)
+pie(s3)
+```
+
+```{r}
+res3 = CA(jeu_donnees_grouped)
+```
+
+```{r}
+res3$eig
+barplot(res3$eig[,2])
+# La dimension 1 à elle seule suffit à expliquement 91.7% de l'inertie.
+```
+
+```{r}
+plot(res3, axes = c(1,2), selectRow = "contrib 6")
+```
+
+L'hypothèse de départ est bien vérifiée.
+
+-   Electronic Arts et Activision sont des sociétés américaines. Elles se sont principalement concentrées sur le marché occidental.
+
+-   A l'inverse, Nintento, Capcom, Square Enix et Tecmo Koei sont des sociétés japonaises qui se sont concentrées plutôt sur le marché national.
+
+On peut conclure que les ventes du Japon proviennent majoritairement des jeux-videos produits par des sociétés japonaises tandis qu'ailleurs, les pays sont davantage ouverts à la mondialisation.
+
+### Plateforme - Région
 
 Les plateformes peuvent également jouer un rôle dans les ventes des différentes régions.
 
@@ -143,7 +178,8 @@ jeu_donnees_grouped2 <- jeu_donnees_filtre2 %>%
     EU_Sales = sum(EU_Sales, na.rm = TRUE),
     JP_Sales = sum(JP_Sales, na.rm = TRUE),
     Other_Sales = sum(Other_Sales, na.rm = TRUE)
-  )
+  ) %>%
+  as.data.frame()
 
 save2 <- jeu_donnees_grouped2$Platform
 jeu_donnees_grouped2 <- jeu_donnees_grouped2[,2:5]
@@ -177,14 +213,27 @@ res2$row$contrib
 ```
 
 ```{r}
-plot(res2, axes = c(1,2), selectRow = "contrib 5")
+plot(res2, axes = c(1,2), selectRow = "contrib 6")
 ```
 
 ```{r}
-plot(res2, axes = c(1,3), selectRow = "contrib 5")
-# On observe que l'axe 1 sépare le reste du monde au Japon
+plot(res2, axes = c(1,3), selectRow = "contrib 6")
 ```
 
 ```{r}
-plot(res2, axes = c(2,3), selectRow = "contrib 5")
+plot(res2, axes = c(2,3), selectRow = "contrib 6")
 ```
+
+On observe que l'axe 1 sépare le reste du monde au Japon.
+
+L'axe 2 montre des caractéristiques communes à l'Europe et le reste du monde. Au contraire, l'Amérique du Nord semble être l'opposé.
+
+L'axe 3 montre malgré tout des différences entre l'Europe et le reste du monde, ces différences cependant ne sont pas significatives, étant donné que l'axe 3 explique très peu l'inertie.
+
+On peut donc interpréter que :
+
+-   Les plateformes les plus utilisées au Japon sont la DS et la 3DS. Ailleurs, les consommateurs de jeux-videos préfèrent jouer sur PC ou sur Xbox.
+
+-   En revanche, en dehors du Japon, ils n'ont pas tous les mêmes gouts. Pour les jeux console, les utilisateurs d'Amérique du Nord préfèrent jouer sur Xbox tandis que l'Europe et les autres régions préfèrent plutôt PlayStation.
+
+-   Enfin, on peut noter que l'Europe apprécie énormément les jeux sur ordinateur, alors que les utilisateurs des pays "moins developpés" utilisent davantage la PS2 et la PS3 qui sont des anciennes consoles de PlayStation sorties en 2000 et 2006/2007 respectivement. Cela peut s'expliquer également par le fait que la population de ces pays ne peut s'offrir les consoles les plus récentes, dues à leur cout élevé.
