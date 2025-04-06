@@ -1,15 +1,15 @@
 # Projet Video Games
 
-## ACP
-
-### Analyse des données
+## Analyse des données
 
 ```{r}
+
 jeu_donnees = read.csv("Video_Games_Sales_as_at_22_Dec_2016.csv")
-jeu_donnees <- na.omit(jeu_donnees) # on enlève les "NA"
+jeu_donnees$User_Score[jeu_donnees$User_Score == "tbd"] <- NA
 jeu_donnees$NA_Sales <- as.numeric(jeu_donnees$NA_Sales)
 jeu_donnees$User_Score <- as.numeric(jeu_donnees$User_Score)
 jeu_donnees$Year_of_Release <- as.numeric(jeu_donnees$Year_of_Release)
+jeu_donnees <- na.omit(jeu_donnees) # on enlève les "NA"
 head(jeu_donnees)
 ```
 
@@ -33,31 +33,20 @@ sales_data_top = jeu_donnees_top[, c("NA_Sales", "EU_Sales", "JP_Sales", "Other_
 boxplot(sales_data_top, ylim = c(0, 10))
 ```
 
+## ACP avec FactoMineR
+
+### Premières observations
+
 ```{r}
 pairs(sales_data_top)
-#on voit pas bien s'il y a une droite, et donc les corrélations entre ces 4 données
-# je pense il faudrait qu'on garde qu'une catégorie pour qu'il y ait moins de données comme vu en TP pour mieux voir (on pourrait garder les jeux d'un seul développeur par exemple)
+#on ne voit pas bien s'il y a une droite pour chaque graphique, c'est-à-dire les corrélations entre ces 4 données, il faudrait donc analyser plus en profondeur ces liaisons.
 ```
 
 ```{r}
 cov(sales_data)
 ```
 
-### Qualité de la représentation d’un individu
-
-```{r}
-# A VOIR SI ON REDUIT LE NOMBRE DE DONNEES (l'idéal serait ensuite dans le cas ou on a toujours trop de données, de séparer les valeurs en différentes catégories, par ex, celles entre 0.75 et 1, 0.5 et 0.75, 0.25 et 0.5, 0 et 0.25)
-```
-
-### Contribution d’un individu à un axe
-
-```{r}
-# pareil
-```
-
-## ACP avec FactoMineR
-
-### On refait avec toutes les variables quantitatives
+### Graphe PCA avec toutes les variables quantitatives
 
 ```{r}
 library(FactoMineR)
@@ -72,9 +61,11 @@ res1
 var_avis <- jeu_donnees[, c("Critic_Score","Critic_Count","User_Score","User_Count")]
 res2 <- PCA(var_avis)
 res2
-#les variables sont globalement bien représentées pour res et res2 mais pas res1
-#pour les individus, la majorité d'entre eux sont mal représentés (trop proche de 0)
 ```
+
+Les variables sont globalement bien représentées pour res et res2 mais pas res1. Pour les individus, la majorité d'entre eux sont mal représentés (trop proche de 0).
+
+Essayons de voir s'il y a des différences en prenant en compte seulement les jeux avec plus de 5 millions de vente.
 
 ```{r}
 var_tot_top <- jeu_donnees_top[, c("Year_of_Release","NA_Sales", "EU_Sales", "JP_Sales", "Other_Sales","Critic_Score","Critic_Count","User_Score","User_Count")]
@@ -85,11 +76,9 @@ res1
 var_avis_top <- jeu_donnees_top[, c("Critic_Score","Critic_Count","User_Score","User_Count")]
 res2 <- PCA(var_avis_top)
 res2
-#les variables sont globalement bien représentées pour res et res2 mais pas res1
-#pour les individus, la majorité d'entre eux sont mal représentés (trop proche de 0)
 ```
 
-### Avec res
+### Avec res (Etude des ventes)
 
 ```{r}
 res$eig
@@ -99,6 +88,7 @@ barplot(res$eig[,2])
 ```{r}
 plot(res, choix="ind")
 plot(res, choix="ind", axes=c(1,3))
+plot(res, choix="ind", axes=c(2,3))
 # on voit tellement rien (à part peut-etre que pour le 2eme graphe, c'est plus "aplati", ce qui signifie que la dimension 3 explique moins)
 ```
 
@@ -121,10 +111,10 @@ plot(res, select="contrib 5", choix="ind")
 ```
 
 ```{r}
-plot(res, select="cos2 0.999", choix="ind") # on voit rien
+plot(res, select="cos2 0.999", choix="ind")
 ```
 
-### Avec res2
+### Avec res2 (Etude des avis)
 
 ```{r}
 res2$eig
@@ -157,7 +147,6 @@ res2_1 <- PCA(var_avis1, quali.sup = 5)
 
 plot.PCA(res2_1, select = "cos2 0.8", habillage = 5)
 #head(res2_1)
-# On voit vraiment rien !
 ```
 
 ### Tri par éditeur
