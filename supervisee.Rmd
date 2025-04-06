@@ -47,7 +47,7 @@ cp.opt
 
 ```{r}
 arbre.opt <- prune(arbre,cp=cp.opt)
-#png("arbre_opt.png", width = 2000, height = 1500, res = 200)
+#png("arbre_opt_date.png", width = 2000, height = 1500, res = 200)
 rpart.plot(arbre.opt, type=4)
 #dev.off()
 ```
@@ -93,17 +93,17 @@ table(Dtest_s,1*(pred_rf_fix>0.5))
 # De manière assez attendue, le taux de bonne prédiction est d'environ 80%. Cela n'est pas très impressionnant même si significativement mieux que le hasard. On peut donc penser que la date de sortie du jeu n'influent pas suffisament sur les données concernant les ventes et les notes pour permettre une prédiction extrèmement fiable.
 ```
 
-### AIC
+### Régression logistique
 
 ```{r}
 library(MASS)
-res_AIC <- glm(New ~ ., family = binomial , data=data_num.train)
+res_logist <- glm(New ~ ., family = binomial , data=data_num.train)
 ```
 
 ```{r}
-pred_AIC = predict(res_AIC, newdata=data_num.test , type="response")
-mean(Dtest_s == 1*(pred_AIC>0.5))
-table(Dtest_s,1*(pred_AIC>0.5))
+pred_logist = predict(res_logist, newdata=data_num.test , type="response")
+mean(Dtest_s == 1*(pred_logist>0.5))
+table(Dtest_s,1*(pred_logist>0.5))
 # On obtient 70% de réussite, soit pire qu'avec RandomForest.
 ```
 
@@ -146,7 +146,7 @@ coef(res_Lasso, s=cvLasso$lambda.min)
 
 ```{r}
 library(pROC)
-pred_logit_lasso=predict(cvLasso, newx = as.matrix(data_num.test[,-1]), s = 'lambda.min', type = "response")
+pred_logit_lasso=predict(cvLasso, newx = as.matrix(data_num.test[,-10]), s = 'lambda.min', type = "response")
 ROC_logit_lasso = roc(data_num.test$New, pred_logit_lasso)
 ROC_logit_lasso$auc 
 ```
@@ -158,7 +158,7 @@ ROC_logit_lasso$auc
 ```{r}
 table(1*(pred_logit_lasso>0.5),data_num.test$New)
 mean(data_num.test$New == 1*(pred_logit_lasso>0.5))
-# Hummmmmmmmm kinda sus ngl
+# 69 encore
 ```
 
 ### Adaboost
@@ -168,6 +168,7 @@ library("gbm")
 fit.adaboost = gbm(as.numeric(New)-1 ~., data_num.train, distribution = "adaboost")
 predict_adaboost = predict.gbm(fit.adaboost,data_num.test)
 class_adaboost <- 1*(predict_adaboost >1/2)
+mean(data_num.test$New == class_adaboost)
 table(class_adaboost, data_num.test$New)
 ```
 
@@ -205,7 +206,7 @@ cp.opt
 
 ```{r}
 arbre.opt <- prune(arbre,cp=cp.opt)
-#png("arbre_opt.png", width = 2000, height = 1500, res = 200)
+png("arbre_opt_crit.png", width = 2000, height = 1500, res = 200)
 rpart.plot(arbre.opt, type=4)
 #dev.off()
 # Cet arbre ne prend en compte finalement que 3 paramètres en compte : User_Score, User_Count, NA_Sales.
@@ -252,6 +253,8 @@ Err = sum((Dtest_s-pred_rf_fix)^2)/sum((Dtest_s-Dtest_s_mean)^2)
 Err
 Err_diff = mean(abs(Dtest_s-pred_rf_fix))
 Err_diff
+Err_max = max(Dtest_s-pred_rf_fix)
+Err_max
 # En moyenne, la prédiction du modèle avec RandomForest se trompe d'un écart de 7.16 points.
 ```
 
@@ -280,6 +283,8 @@ Err = sum((Dtest_s-pred_logit_gauss)^2)/sum((Dtest_s-Dtest_s_mean)^2)
 Err
 Err_diff = mean(abs(Dtest_s-pred_logit_gauss))
 Err_diff
+Err_max = max(Dtest_s-pred_logit_gauss)
+Err_max
 # En moyenne, la prédiction du modèle avec régression se trompe d'un écart de 7.91 points.
 ```
 
@@ -293,9 +298,11 @@ Err = sum((Dtest_s-predict_adaboost)^2)/sum((Dtest_s-Dtest_s_mean)^2)
 Err
 Err_diff = mean(abs(Dtest_s-predict_adaboost))
 Err_diff
+Err_max = max(Dtest_s-predict_adaboost)
+Err_max
 # En moyenne, la prédiction du modèle avec Adaboost se trompe d'un écart de 7.36 points.
 ```
 
 ### VERDICT :
 
-Le modèle RandomForest est sensiblement meilleur que Adaboose ou la régression linéaire, mais les trois ont de résultats assez proches. On semble donc pourvoir prédire la note de la presse avec une moyenne de 7.16 d'écart. En sachant que la note de la presse peut varier entre 13 et 98 sur notre jeu de données, il s'agit d'un résultat relativement convaincant (en tout cas bien meilleur que le hasard).
+Le modèle RandomForest est sensiblement meilleur que Adaboost ou la régression linéaire, mais les trois ont de résultats assez proches. On semble donc pourvoir prédire la note de la presse avec une moyenne de 7.16 d'écart. En sachant que la note de la presse peut varier entre 13 et 98 sur notre jeu de données, il s'agit d'un résultat relativement convaincant (en tout cas bien meilleur que le hasard).
