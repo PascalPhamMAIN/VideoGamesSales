@@ -204,7 +204,7 @@ res2 = CA(jeu_donnees_grouped2)
 ```{r}
 res2$eig
 barplot(res2$eig[,2])
-# 3 axes cette fois-ci
+# 2 axes cette fois-ci
 ```
 
 ```{r}
@@ -216,24 +216,12 @@ res2$row$contrib
 plot(res2, axes = c(1,2), selectRow = "contrib 6")
 ```
 
-```{r}
-plot(res2, axes = c(1,3), selectRow = "contrib 6")
-```
-
-```{r}
-plot(res2, axes = c(2,3), selectRow = "contrib 6")
-```
-
 On observe que l'axe 1 sépare le reste du monde au Japon.
 
 L'axe 2 montre des caractéristiques communes à l'Europe et le reste du monde. Au contraire, l'Amérique du Nord semble être l'opposé.
-
-L'axe 3 montre malgré tout des différences entre l'Europe et le reste du monde, ces différences cependant ne sont pas significatives, étant donné que l'axe 3 explique très peu l'inertie.
 
 On peut donc interpréter que :
 
 -   Les plateformes les plus utilisées au Japon sont la DS et la 3DS. Ailleurs, les consommateurs de jeux-videos préfèrent jouer sur PC ou sur Xbox.
 
--   En revanche, en dehors du Japon, ils n'ont pas tous les mêmes gouts. Pour les jeux console, les utilisateurs d'Amérique du Nord préfèrent jouer sur Xbox tandis que l'Europe et les autres régions préfèrent plutôt PlayStation.
-
--   Enfin, on peut noter que l'Europe apprécie énormément les jeux sur ordinateur, alors que les utilisateurs des pays "moins developpés" utilisent davantage la PS2 et la PS3 qui sont des anciennes consoles de PlayStation sorties en 2000 et 2006/2007 respectivement. Cela peut s'expliquer également par le fait que la population de ces pays ne peut s'offrir les consoles les plus récentes, dues à leur cout élevé.
+-   En revanche, en dehors du Japon, ils n'ont pas tous les mêmes gouts. Pour les jeux console, les utilisateurs d'Amérique du Nord préfèrent jouer sur Xbox tandis que l'Europe et les autres régions préfèrent plutôt la PS4.
