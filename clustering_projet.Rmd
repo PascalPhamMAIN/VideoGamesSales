@@ -2,14 +2,16 @@
 
 ```{r}
 jeu_donnees = read.csv("Video_Games_Sales_as_at_22_Dec_2016.csv")
+
+jeu_donnees$NA_Sales <- as.numeric(jeu_donnees$NA_Sales)
+jeu_donnees$User_Score[jeu_donnees$User_Score == "tbd"] <- NA
+jeu_donnees$User_Score <- as.numeric(jeu_donnees$User_Score)
 jeu_donnees <- na.omit(jeu_donnees) # on enlève les "NA"
 head(jeu_donnees)
-jeu_donnees$NA_Sales <- as.numeric(jeu_donnees$NA_Sales)
-jeu_donnees$User_Score <- as.numeric(jeu_donnees$User_Score)
 ```
 
 ```{r}
-jeu_donnees_top <- jeu_donnees[jeu_donnees$Global_Sales >= 5.0,] # plus de 15 millions de ventes
+jeu_donnees_top <- jeu_donnees[jeu_donnees$Global_Sales >= 5.0,] # plus de 5 millions de ventes
 sales_data_top = jeu_donnees_top[, c("Name","NA_Sales", "EU_Sales", "JP_Sales", "Other_Sales")]
 pairs(sales_data_top[,2:5])
 ```
@@ -163,6 +165,14 @@ new_testACP <- PCA(data_top2, quali.sup = "classe")
 ```
 
 ```{r}
+plot(new_testACP, choix = "var", axes = c(1, 3))
+```
+
+```{r}
+plot(new_testACP, choix = "var", axes = c(2, 3))
+```
+
+```{r}
 plot.PCA(new_testACP, select = "cos2 0.8", habillage = "classe", cex = 0.7)
 ```
 
@@ -195,4 +205,4 @@ table(pam.result$clustering, kmeans.result$cluster)
 
 Wii Sport représentant un groupe a une silhouette nulle. En effet, hormis, le fait d'être le jeu le plus vendu, il n'y a pas de différences significatives par rapport aux autres groupes.
 
-En observant les jeux ayant une faible silhouette, on retrouve justement les 2 jeux Grand Theft Auto V et Gran Turismo 3: A-Spec qui se retrouvaient parfois dans le groupe contenant 20 jeux, et parfois dans celui avec 6 jeux. (**A VOIR JE SUIS PAS CONVAINCU**).
+En observant les jeux ayant une faible silhouette, on retrouve justement les 2 jeux Grand Theft Auto V et Gran Turismo 3: A-Spec qui se retrouvaient parfois dans le groupe contenant 20 jeux, et parfois dans celui avec 6 jeux.
