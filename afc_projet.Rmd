@@ -222,6 +222,6 @@ L'axe 2 montre des caractéristiques communes à l'Europe et le reste du monde. 
 
 On peut donc interpréter que :
 
--   Les plateformes les plus utilisées au Japon sont la DS et la 3DS. Ailleurs, les consommateurs de jeux-videos préfèrent jouer sur PC ou sur Xbox.
+-   Les plateformes les plus utilisées au Japon sont la DS et la 3DS. Ailleurs, les consommateurs de jeux-videos préfèrent jouer sur PC ou sur Xbox ou la PlayStation.
 
--   En revanche, en dehors du Japon, ils n'ont pas tous les mêmes gouts. Pour les jeux console, les utilisateurs d'Amérique du Nord préfèrent jouer sur Xbox tandis que l'Europe et les autres régions préfèrent plutôt la PS4.
+-   En revanche, en dehors du Japon, ils n'ont pas tous les mêmes gouts. Pour les jeux console, les utilisateurs d'Amérique du Nord préfèrent jouer sur Xbox/Xbox360 tandis que l'Europe et les autres régions préfèrent plutôt la PS4.
